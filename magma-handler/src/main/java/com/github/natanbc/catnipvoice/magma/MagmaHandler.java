@@ -7,9 +7,12 @@ import space.npstr.magma.MagmaApi;
 import space.npstr.magma.MagmaMember;
 import space.npstr.magma.MagmaServerUpdate;
 
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 
 public class MagmaHandler implements VoiceHandler {
+    private final Map<String, AudioProvider> providerMap = new ConcurrentHashMap<>();
     private final MagmaApi magma;
 
     public MagmaHandler(Function<String, IAudioSendFactory> sendFactoryFunction) {
@@ -51,6 +54,10 @@ public class MagmaHandler implements VoiceHandler {
                 .userId(userId)
                 .guildId(guildId)
                 .build();
+        var old = providerMap.put(guildId, audioProvider);
+        if(old != null) {
+            old.close();
+        }
         if(audioProvider == null) {
             magma.removeSendHandler(member);
         } else {

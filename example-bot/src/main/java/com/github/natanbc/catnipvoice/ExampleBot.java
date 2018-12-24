@@ -3,6 +3,8 @@ package com.github.natanbc.catnipvoice;
 import com.github.natanbc.catnipvoice.magma.MagmaHandler;
 import com.mewna.catnip.Catnip;
 import com.mewna.catnip.shard.DiscordEvent;
+import com.sedmelluq.discord.lavaplayer.format.AudioDataFormat;
+import com.sedmelluq.discord.lavaplayer.format.StandardAudioDataFormats;
 import com.sedmelluq.discord.lavaplayer.jdaudp.NativeAudioSendFactory;
 import com.sedmelluq.discord.lavaplayer.player.AudioLoadResultHandler;
 import com.sedmelluq.discord.lavaplayer.player.DefaultAudioPlayerManager;
@@ -17,12 +19,17 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 
 public class ExampleBot {
+    //change to DISCORD_PCM_S16_BE to test the built in opus encoding
+    public static final AudioDataFormat LP_FORMAT = StandardAudioDataFormats.DISCORD_OPUS;
+
     public static void main(String[] args) throws IOException {
         var sendFactory = new NativeAudioSendFactory();
         var handler = new MagmaHandler(sendFactory);
 
         var playerManager = new DefaultAudioPlayerManager();
         AudioSourceManagers.registerRemoteSources(playerManager);
+
+        playerManager.getConfiguration().setOutputFormat(LP_FORMAT);
 
         //IMPORTANT
         //without this line the bot will NOT work
@@ -54,7 +61,6 @@ public class ExampleBot {
 
                 catnip.openVoiceConnection(guild, voiceState.channelId());
                 extension.setAudioProvider(guild, new AudioPlayerAudioProvider(player));
-
 
                 playerManager.loadItem(what, new AudioLoadResultHandler() {
                     @Override

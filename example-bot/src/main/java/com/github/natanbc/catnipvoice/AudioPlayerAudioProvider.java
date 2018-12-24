@@ -7,7 +7,7 @@ import com.sedmelluq.discord.lavaplayer.track.playback.MutableAudioFrame;
 import java.nio.ByteBuffer;
 
 public class AudioPlayerAudioProvider implements AudioProvider {
-    private final ByteBuffer buffer = ByteBuffer.allocate(StandardAudioDataFormats.DISCORD_OPUS.maximumChunkSize());
+    private final ByteBuffer buffer = ByteBuffer.allocate(ExampleBot.LP_FORMAT.maximumChunkSize());
     private final MutableAudioFrame frame = new MutableAudioFrame();
     private final AudioPlayer player;
 
@@ -29,6 +29,6 @@ public class AudioPlayerAudioProvider implements AudioProvider {
 
     @Override
     public boolean isOpus() {
-        return true;
+        return ExampleBot.LP_FORMAT == StandardAudioDataFormats.DISCORD_OPUS;
     }
 }

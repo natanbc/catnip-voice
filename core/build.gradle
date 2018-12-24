@@ -11,4 +11,7 @@ repositories {
 
 dependencies {
     compileOnly 'com.github.mewna:catnip:882640f'
+    compile ('club.minnced:opus-java:1.0.4@pom') {
+        transitive = true // gradle defaults to transitive false with @pom
+    }
 }

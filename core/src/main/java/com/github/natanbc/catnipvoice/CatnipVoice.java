@@ -16,7 +16,7 @@ public class CatnipVoice extends AbstractExtension {
     }
 
     public void setAudioProvider(String guildId, AudioProvider provider) {
-        voiceHandler.setAudioProvider(selfUser().id(), guildId, provider);
+        voiceHandler.setAudioProvider(selfUser().id(), guildId, EncodingAudioProvider.wrapIfNeeded(provider));
     }
 
     public void closeConnection(String guildId) {
@@ -32,7 +32,6 @@ public class CatnipVoice extends AbstractExtension {
             VoiceState vs = catnip().cache().voiceState(vsu.guildId(), self.id());
             //how²
             if(vs == null) return;
-            System.out.println("id: " + self.id() + ", guild id: " + vsu.guildId() + ", endpoint " + vsu.endpoint() + ", token " + vsu.token() + ", session id " + vs.sessionId());
             voiceHandler.handleVoiceServerUpdate(self.id(), vsu.guildId(), vsu.endpoint(), vsu.token(), vs.sessionId());
         });
     }

@@ -1,0 +1,14 @@
+plugins {
+    id 'java'
+}
+
+repositories {
+    jcenter()
+    maven { url 'https://jitpack.io' }
+}
+
+dependencies {
+    compile 'space.npstr:Magma:0.8.1'
+    
+    compile project(':core')
+}

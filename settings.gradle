@@ -1,0 +1,5 @@
+rootProject.name = 'catnip-voice'
+include 'magma-handler'
+include 'core'
+include 'example-bot'
+

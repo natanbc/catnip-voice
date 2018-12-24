@@ -1,0 +1,109 @@
+import org.apache.tools.ant.filters.ReplaceTokens
+
+plugins {
+    id 'java'
+}
+
+def versionObj = new Version(major: 0, minor: 1)
+
+allprojects {
+    task sourcesJar(type: Jar) {
+        from sourceSets.main.allJava
+        classifier = 'sources'
+    }
+
+    task javadocJar(type: Jar) {
+        from javadoc
+        classifier = 'javadoc'
+    }
+
+
+    javadoc {
+        if(JavaVersion.current().isJava9Compatible()) {
+            options.addBooleanOption('html5', true)
+        }
+    }
+    
+    group 'com.github.natanbc.catnipvoice'
+    version versionObj.toString()
+
+    sourceCompatibility = 11
+
+    def lint = [
+            "auxiliaryclass",
+            "cast",
+            "deprecation",
+            "dep-ann",
+            "divzero",
+            "empty",
+            "exports",
+            "fallthrough",
+            "finally",
+            "module",
+            "opens",
+            "options",
+            "overloads",
+            "overrides",
+            "path",
+            "rawtypes",
+            "removal",
+            "static",
+            "try",
+            "unchecked",
+            "varargs",
+            "preview"
+    ]
+
+    task sourcesForRelease(type: Copy) {
+        from ('src/main/java') {
+            include '**/Version.java'
+            filter(ReplaceTokens, tokens: [
+                    VERSION_MAJOR:    versionObj.major,
+                    VERSION_MINOR:    versionObj.minor,
+                    VERSION_REVISION: versionObj.revision,
+                    COMMIT:           getCommitHash(),
+            ])
+        }
+        into 'build/filteredSrc'
+
+        includeEmptyDirs = false
+    }
+
+    task generateJavaSources(type: SourceTask) {
+        def javaSources = sourceSets.main.allJava.filter {
+            it.name != 'Version.java'
+        }
+        source = javaSources + sourcesForRelease.destinationDir
+
+        dependsOn sourcesForRelease
+    }
+
+    compileJava {
+        source = generateJavaSources.source
+
+        dependsOn generateJavaSources
+    }
+
+    tasks.withType(JavaCompile) {
+        options.encoding = 'UTF-8'
+        options.incremental = true
+        options.compilerArgs += ["-Xlint:${lint.join(",")}", "-Werror"]
+    }
+
+    compileTestJava.enabled = false
+    processTestResources.enabled = false
+}
+
+class Version {
+    String major, minor, revision
+
+    String toString() {
+        "$major.$minor${revision == null || revision.trim().isEmpty() || revision == "0" ? "" : ".$revision"}"
+    }
+}
+
+static def getCommitHash() {
+    def p = Runtime.getRuntime().exec("git rev-parse HEAD")
+    p.waitFor()
+    p.getIn().text.trim()
+}

@@ -4,12 +4,14 @@ import club.minnced.opus.util.OpusLibrary;
 import com.sun.jna.ptr.PointerByReference;
 import tomp2p.opuswrapper.Opus;
 
+import javax.annotation.Nonnull;
 import javax.sound.sampled.AudioFormat;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.IntBuffer;
 import java.nio.ShortBuffer;
+import java.util.Objects;
 
 public class EncodingAudioProvider implements AudioProvider {
     public static final AudioFormat INPUT_FORMAT = new AudioFormat(48000f, 16, 2, true, true);
@@ -34,7 +36,8 @@ public class EncodingAudioProvider implements AudioProvider {
     private final PointerByReference opusEncoder;
     private volatile boolean closed;
 
-    public EncodingAudioProvider(AudioProvider source) {
+    public EncodingAudioProvider(@Nonnull AudioProvider source) {
+        Objects.requireNonNull(source, "Source may not be null");
         //lazy load if needed
         try {
             OpusLibrary.loadFromJar();
@@ -54,6 +57,7 @@ public class EncodingAudioProvider implements AudioProvider {
         return source.canProvide();
     }
 
+    @Nonnull
     @Override
     public synchronized ByteBuffer provide() {
         if(closed) {
@@ -79,7 +83,8 @@ public class EncodingAudioProvider implements AudioProvider {
         source.close();
     }
 
-    public static AudioProvider wrapIfNeeded(AudioProvider source) {
+    @Nonnull
+    public static AudioProvider wrapIfNeeded(@Nonnull AudioProvider source) {
         if(source.isOpus()) {
             return source;
         }

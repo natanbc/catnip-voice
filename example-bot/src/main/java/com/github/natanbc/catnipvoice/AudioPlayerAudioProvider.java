@@ -4,6 +4,7 @@ import com.sedmelluq.discord.lavaplayer.format.StandardAudioDataFormats;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayer;
 import com.sedmelluq.discord.lavaplayer.track.playback.MutableAudioFrame;
 
+import javax.annotation.Nonnull;
 import java.nio.ByteBuffer;
 
 public class AudioPlayerAudioProvider implements AudioProvider {
@@ -22,6 +23,7 @@ public class AudioPlayerAudioProvider implements AudioProvider {
         return player.provide(frame);
     }
 
+    @Nonnull
     @Override
     public ByteBuffer provide() {
         return buffer.position(0).limit(frame.getDataLength());

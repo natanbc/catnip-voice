@@ -14,4 +14,6 @@ dependencies {
     compile ('club.minnced:opus-java:1.0.4@pom') {
         transitive = true // gradle defaults to transitive false with @pom
     }
+    
+    compile 'com.google.code.findbugs:jsr305:3.0.2'
 }

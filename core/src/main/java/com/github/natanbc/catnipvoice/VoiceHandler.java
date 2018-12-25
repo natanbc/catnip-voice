@@ -1,9 +1,15 @@
 package com.github.natanbc.catnipvoice;
 
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+
 public interface VoiceHandler {
-    void handleVoiceServerUpdate(String userId, String guildId, String endpoint, String token, String sessionId);
+    void handleVoiceServerUpdate(@Nonnull String userId, @Nonnull String guildId, @Nonnull String endpoint,
+                                 @Nonnull String token, @Nonnull String sessionId);
 
-    void closeConnection(String userId, String guildId);
+    void closeConnection(@Nonnull String userId, @Nonnull String guildId);
 
-    void setAudioProvider(String userId, String guildId, AudioProvider audioProvider);
+    void setAudioProvider(@Nonnull String userId, @Nonnull String guildId, @Nullable AudioProvider audioProvider);
+
+    void shutdown();
 }

@@ -5,21 +5,24 @@ import com.mewna.catnip.entity.user.VoiceState;
 import com.mewna.catnip.extension.AbstractExtension;
 import com.mewna.catnip.shard.DiscordEvent;
 
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.util.Objects;
 
 public class CatnipVoice extends AbstractExtension {
     private final VoiceHandler voiceHandler;
 
-    public CatnipVoice(VoiceHandler voiceHandler) {
+    public CatnipVoice(@Nonnull VoiceHandler voiceHandler) {
         super("CatnipVoice");
-        this.voiceHandler = voiceHandler;
+        this.voiceHandler = Objects.requireNonNull(voiceHandler, "Voice handler may not be null");
     }
 
-    public void setAudioProvider(String guildId, AudioProvider provider) {
-        voiceHandler.setAudioProvider(selfUser().id(), guildId, EncodingAudioProvider.wrapIfNeeded(provider));
+    public void setAudioProvider(@Nonnull String guildId, @Nullable AudioProvider provider) {
+        voiceHandler.setAudioProvider(selfUser().id(), guildId,
+                provider == null ? null : EncodingAudioProvider.wrapIfNeeded(provider));
     }
 
-    public void closeConnection(String guildId) {
+    public void closeConnection(@Nonnull String guildId) {
         voiceHandler.closeConnection(selfUser().id(), guildId);
     }
 
@@ -36,6 +39,12 @@ public class CatnipVoice extends AbstractExtension {
         });
     }
 
+    @Override
+    public void stop() {
+        voiceHandler.shutdown();
+    }
+
+    @Nonnull
     private User selfUser() {
         var catnip = Objects.requireNonNull(catnip(), "No catnip instance set! Load the extension before using!");
         return Objects.requireNonNull(catnip.selfUser(), "Self user is null! Wait for the catnip instance to be loaded!");

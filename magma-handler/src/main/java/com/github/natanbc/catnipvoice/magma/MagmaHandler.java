@@ -58,7 +58,7 @@ public class MagmaHandler implements VoiceHandler {
 
     @Override
     public void setAudioProvider(@Nonnull String userId, @Nonnull String guildId, @Nullable AudioProvider audioProvider) {
-        if(audioProvider != null && !audioProvider.isOpus()) {
+        if(audioProvider != null) {
             audioProvider = new EncodingAudioProvider(audioProvider);
         }
         var member = MagmaMember.builder()

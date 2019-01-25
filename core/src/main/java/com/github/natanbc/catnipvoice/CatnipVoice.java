@@ -18,8 +18,7 @@ public class CatnipVoice extends AbstractExtension {
     }
 
     public void setAudioProvider(@Nonnull String guildId, @Nullable AudioProvider provider) {
-        voiceHandler.setAudioProvider(selfUser().id(), guildId,
-                provider == null ? null : EncodingAudioProvider.wrapIfNeeded(provider));
+        voiceHandler.setAudioProvider(selfUser().id(), guildId, provider);
     }
 
     public void closeConnection(@Nonnull String guildId) {

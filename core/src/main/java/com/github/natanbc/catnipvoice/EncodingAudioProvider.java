@@ -27,29 +27,15 @@ public class EncodingAudioProvider implements AudioProvider {
     //not sure what those magic constants mean
     public static final int MAXIMUM_OUTPUT_BUFFER_SIZE = 32 + 1536 * 960 /* samples per chunk */ / 960;
 
-    private final ShortBuffer intermediateBuffer =
-            ByteBuffer.allocateDirect(MAXIMUM_INPUT_BUFFER_SIZE)
-                    .order(ByteOrder.nativeOrder())
-                    .asShortBuffer();
-    private final ByteBuffer resultBuffer = ByteBuffer.allocate(MAXIMUM_OUTPUT_BUFFER_SIZE);
     private final AudioProvider source;
-    private final PointerByReference opusEncoder;
+    private volatile ShortBuffer intermediateBuffer;
+    private volatile ByteBuffer resultBuffer;
+    private volatile PointerByReference opusEncoder;
     private volatile boolean closed;
 
     public EncodingAudioProvider(@Nonnull AudioProvider source) {
         Objects.requireNonNull(source, "Source may not be null");
-        //lazy load if needed
-        try {
-            OpusLibrary.loadFromJar();
-        } catch(IOException e) {
-            throw new IllegalStateException("Unable to load opus library", e);
-        }
         this.source = source;
-        var error = IntBuffer.allocate(1);
-        this.opusEncoder = Opus.INSTANCE.opus_encoder_create(OPUS_SAMPLE_RATE, OPUS_CHANNEL_COUNT, Opus.OPUS_APPLICATION_AUDIO, error);
-        if(error.get() != Opus.OPUS_OK && opusEncoder == null) {
-            throw new IllegalStateException("Unable to create opus encoder! Error code: " + error.get(0));
-        }
     }
 
     @Override
@@ -60,14 +46,19 @@ public class EncodingAudioProvider implements AudioProvider {
     @Nonnull
     @Override
     public synchronized ByteBuffer provide() {
-        if(closed) {
-            throw new IllegalStateException("Encoder closed");
+        if(source.isOpus()) {
+            return source.provide();
+        } else {
+            if(closed) {
+                throw new IllegalStateException("Encoder closed");
+            }
+            setupEncoder();
+            var b = source.provide();
+            intermediateBuffer.clear().put(b.asShortBuffer()).flip();
+            resultBuffer.position(0);
+            var amount = Opus.INSTANCE.opus_encode(opusEncoder, intermediateBuffer, OPUS_FRAME_SIZE, resultBuffer, resultBuffer.capacity());
+            return resultBuffer.limit(amount);
         }
-        var b = source.provide();
-        intermediateBuffer.clear().put(b.asShortBuffer()).flip();
-        resultBuffer.position(0);
-        var amount = Opus.INSTANCE.opus_encode(opusEncoder, intermediateBuffer, OPUS_FRAME_SIZE, resultBuffer, resultBuffer.capacity());
-        return resultBuffer.limit(amount);
     }
 
     @Override
@@ -79,15 +70,34 @@ public class EncodingAudioProvider implements AudioProvider {
     public synchronized void close() {
         if(closed) return;
         closed = true;
-        Opus.INSTANCE.opus_encoder_destroy(opusEncoder);
+        if(opusEncoder != null) {
+            Opus.INSTANCE.opus_encoder_destroy(opusEncoder);
+        }
         source.close();
     }
 
     @Nonnull
-    public static AudioProvider wrapIfNeeded(@Nonnull AudioProvider source) {
-        if(source.isOpus()) {
-            return source;
-        }
+    public static AudioProvider wrap(@Nonnull AudioProvider source) {
         return new EncodingAudioProvider(source);
+    }
+
+    protected synchronized void setupEncoder() {
+        if(opusEncoder != null) return;
+        //lazy load if needed
+        try {
+            OpusLibrary.loadFromJar();
+        } catch(IOException e) {
+            throw new IllegalStateException("Unable to load opus library", e);
+        }
+        var error = IntBuffer.allocate(1);
+        this.opusEncoder = Opus.INSTANCE.opus_encoder_create(OPUS_SAMPLE_RATE, OPUS_CHANNEL_COUNT, Opus.OPUS_APPLICATION_AUDIO, error);
+        if(error.get() != Opus.OPUS_OK && opusEncoder == null) {
+            throw new IllegalStateException("Unable to create opus encoder! Error code: " + error.get(0));
+        }
+        intermediateBuffer = ByteBuffer.allocateDirect(MAXIMUM_INPUT_BUFFER_SIZE)
+                        .order(ByteOrder.nativeOrder())
+                        .asShortBuffer();
+        resultBuffer = ByteBuffer.allocate(MAXIMUM_OUTPUT_BUFFER_SIZE);
+
     }
 }

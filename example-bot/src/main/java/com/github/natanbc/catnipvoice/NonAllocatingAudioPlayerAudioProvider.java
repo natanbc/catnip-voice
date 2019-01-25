@@ -7,12 +7,12 @@ import com.sedmelluq.discord.lavaplayer.track.playback.MutableAudioFrame;
 import javax.annotation.Nonnull;
 import java.nio.ByteBuffer;
 
-public class AudioPlayerAudioProvider implements AudioProvider {
+public class NonAllocatingAudioPlayerAudioProvider implements AudioProvider {
     private final ByteBuffer buffer = ByteBuffer.allocate(ExampleBot.LP_FORMAT.maximumChunkSize());
     private final MutableAudioFrame frame = new MutableAudioFrame();
     private final AudioPlayer player;
 
-    public AudioPlayerAudioProvider(AudioPlayer player) {
+    public NonAllocatingAudioPlayerAudioProvider(AudioPlayer player) {
         this.player = player;
         frame.setBuffer(buffer);
     }

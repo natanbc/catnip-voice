@@ -17,10 +17,12 @@ import com.sedmelluq.discord.lavaplayer.track.playback.NonAllocatingAudioFrameBu
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Objects;
 
 public class ExampleBot {
     //change to DISCORD_PCM_S16_BE to test the built in opus encoding
     public static final AudioDataFormat LP_FORMAT = StandardAudioDataFormats.DISCORD_OPUS;
+    public static final boolean USE_NON_ALLOCATING_FRAME_BUFFER = false;
 
     public static void main(String[] args) throws IOException {
         var sendFactory = new NativeAudioSendFactory();
@@ -31,9 +33,9 @@ public class ExampleBot {
 
         playerManager.getConfiguration().setOutputFormat(LP_FORMAT);
 
-        //IMPORTANT
-        //without this line the bot will NOT work
-        playerManager.getConfiguration().setFrameBufferFactory(NonAllocatingAudioFrameBuffer::new);
+        if(USE_NON_ALLOCATING_FRAME_BUFFER) {
+            playerManager.getConfiguration().setFrameBufferFactory(NonAllocatingAudioFrameBuffer::new);
+        }
 
         var catnip = Catnip.catnip(Files.readString(Path.of("token.txt")));
 
@@ -57,10 +59,15 @@ public class ExampleBot {
                     return;
                 }
                 var player = playerManager.createPlayer();
-                var extension = catnip.extensionManager().extension(CatnipVoice.class);
+                var extension = Objects.requireNonNull(catnip.extensionManager().extension(CatnipVoice.class));
 
-                catnip.openVoiceConnection(guild, voiceState.channelId());
-                extension.setAudioProvider(guild, new AudioPlayerAudioProvider(player));
+                catnip.openVoiceConnection(guild, Objects.requireNonNull(voiceState.channelId()));
+
+                if(USE_NON_ALLOCATING_FRAME_BUFFER) {
+                    extension.setAudioProvider(guild, new NonAllocatingAudioPlayerAudioProvider(player));
+                } else {
+                    extension.setAudioProvider(guild, new AllocatingAudioPlayerAudioProvider(player));
+                }
 
                 playerManager.loadItem(what, new AudioLoadResultHandler() {
                     @Override

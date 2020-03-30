@@ -8,7 +8,7 @@ repositories {
 }
 
 dependencies {
-    compile 'space.npstr:Magma:0.8.1'
+    compile 'space.npstr:Magma:0.12.6'
     
     compile project(':core')
 }

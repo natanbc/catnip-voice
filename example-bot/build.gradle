@@ -9,7 +9,7 @@ repositories {
 }
 
 dependencies {
-    compile 'com.mewna:catnip:5d44e1f'
+    compile 'com.mewna:catnip:2.0.0'
     
     //compile 'com.github.natanbc.catnip-voice:magma-handler:COMMIT HASH'
     compile project(':magma-handler')
